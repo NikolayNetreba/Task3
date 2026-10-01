@@ -7,4 +7,5 @@
 
 # Task Stack
 
-![img](https://miro.medium.com/v2/resize:fit:1000/0*s4dwDR8AEY-P5zHP.jpg)
+
+<img src="https://miro.medium.com/v2/resize:fit:1000/0*s4dwDR8AEY-P5zHP.jpg" style="width: 250px; image-rendering: pixelated;" alt="Четкое изображение">
