@@ -7,4 +7,4 @@
 
 # Task Stack
 
-![img](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZ5jsg1NwL2wkTANQkhSfna7wbmkJgWh__w7MXwVDMbVF8S5xgCuqJFCA&s=10)
+![img](https://miro.medium.com/v2/resize:fit:1000/0*s4dwDR8AEY-P5zHP.jpg)
