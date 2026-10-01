@@ -19,20 +19,20 @@ static canary_t* find_right_canary(char* start, size_t capacity){
 }
 
 //=============DEBUG======================================
-ErrorStack stack_ok(stack_t* a){
-    if(a == NULL)
+ErrorStack stack_ok(stack_t* stack){
+    if(stack == NULL)
         return STACK_NULL_POINTER;
-    if(a->data == NULL)
+    if(stack->data == NULL)
         return STACK_DATA_NULL;
 
-    if(a->capacity > MAX_CAPACITY || (a->capacity == 0 && a->data != NULL))
+    if(stack->capacity > MAX_CAPACITY || (stack->capacity == 0 && stack->data != NULL))
         return STACK_BAD_CAPACITY;
-    if(a->size > a->capacity)
+    if(stack->size > stack->capacity)
         return STACK_OVERFLOW;
 
-    if(a->leftCanary != CANARY_VALUE || a->rightCanary != CANARY_VALUE)
+    if(stack->leftCanary != CANARY_VALUE || stack->rightCanary != CANARY_VALUE)
         return STACK_CANARY_DIED;
-    if(*(canary_t*)(GET_DATA_CANARY_PTR(a)) != CANARY_VALUE || *find_right_canary(GET_DATA_CANARY_PTR(a), a->capacity) != CANARY_VALUE)
+    if(*(canary_t*)(GET_DATA_CANARY_PTR(stack)) != CANARY_VALUE || *find_right_canary(GET_DATA_CANARY_PTR(stack), stack->capacity) != CANARY_VALUE)
         return STACK_DATA_CANARY_DIED;
 
     return STACK_OK;
@@ -80,7 +80,7 @@ static void print_canary(uint64_t canary, const char* label){
     }
 }
 
-void dump_stack(stack_t* a, ErrorStack err, const char* func, const char* file, int line){
+void dump_stack(stack_t* stack, ErrorStack err, const char* func, const char* file, int line){
     const char* statName = status_name(err);
 
     fprintf(stderr, LINE);
@@ -92,27 +92,27 @@ void dump_stack(stack_t* a, ErrorStack err, const char* func, const char* file, 
         return;
     }
     if(err == STACK_BAD_CAPACITY){
-        fprintf(stderr, "capacity = %zu\n" LINE, a->capacity);
+        fprintf(stderr, "capacity = %zu\n" LINE, stack->capacity);
         return;
     }
 
-    fprintf(stderr, "stack_t <" MAKE_GREEN("%s") ">, located at: [%p], created by %s at %s:%zu\n{\n", a->name , a, a->func, a->file, a->line);
+    fprintf(stderr, "stack_t <" MAKE_GREEN("%s") ">, located at: [%p], created by %s at %s:%zu\n{\n", stack->name , stack, stack->func, stack->file, stack->line);
 
-    fprintf(stderr, "capacity = %zu\nsize     = %zu\ndata[%p]\n", a->capacity, a->size, a->data);
+    fprintf(stderr, "capacity = %zu\nsize     = %zu\ndata[%p]\n", stack->capacity, stack->size, stack->data);
 
-    print_canary(a->leftCanary, "stack left canary");
-    print_canary(a->rightCanary, "stack right canary");
-    print_canary(*(canary_t*)(GET_DATA_CANARY_PTR(a)), "data left canary");
-    print_canary(*find_right_canary(GET_DATA_CANARY_PTR(a), a->capacity), "data right canary");
+    print_canary(stack->leftCanary, "stack left canary");
+    print_canary(stack->rightCanary, "stack right canary");
+    print_canary(*(canary_t*)(GET_DATA_CANARY_PTR(stack)), "data left canary");
+    print_canary(*find_right_canary(GET_DATA_CANARY_PTR(stack), stack->capacity), "data right canary");
 
     fprintf(stderr, "\n");
-    for(size_t i = 0; i < a->capacity; i++){
-        if(i < a->size){
+    for(size_t i = 0; i < stack->capacity; i++){
+        if(i < stack->size){
             fprintf(stderr, "  *[%3zu] - ", i);
-            ELEM_PRINT(a->data[i]);
+            ELEM_PRINT(stack->data[i]);
         } else {
             fprintf(stderr, "   [%3zu] - POISON: ", i);
-            ELEM_PRINT(a->data[i]);
+            ELEM_PRINT(stack->data[i]);
         }
     }
     fprintf(stderr, "}\n" LINE);
@@ -184,11 +184,11 @@ stack_t* init_stack(size_t capacity
 //=============INITIALIZATION=============================
 
 //=============FUNCTIONS===================================
-void destroy_stack(stack_t* a){
-    if(a == NULL || a->data == NULL) return;
+void destroy_stack(stack_t* stack){
+    if(stack == NULL || stack->data == NULL) return;
 
-    free(GET_DATA_CANARY_PTR(a));
-    free(a);
+    free(GET_DATA_CANARY_PTR(stack));
+    free(stack);
 }
 
 static elem_t* realloc_data(char* data, size_t newCapacity){
@@ -208,77 +208,77 @@ static elem_t* realloc_data(char* data, size_t newCapacity){
     return (elem_t*)(temp + sizeof(canary_t));
 }
 
-static ErrorStack expand_stack(stack_t* a){
-    STACK_CHECK(a);
+static ErrorStack expand_stack(stack_t* stack){
+    STACK_CHECK(stack);
 
-    size_t newCapacity = (size_t)(a->capacity * 2 + 1);
-    elem_t* temp = realloc_data(GET_DATA_CANARY_PTR(a), newCapacity);
-
-    if(temp == NULL){
-        return STACK_ALLOC_FAILED;
-    } else {
-        a->data = temp;
-        a->capacity = newCapacity;
-
-        fill_data_with_poison(a);
-    }
-
-    STACK_CHECK(a);
-
-    return STACK_OK;
-}
-
-static ErrorStack narrow_stack(stack_t* a){
-    STACK_CHECK(a);
-
-    size_t newCapacity = (size_t)(a->capacity / 2 + 1);
-    elem_t* temp = realloc_data(GET_DATA_CANARY_PTR(a), newCapacity);
+    size_t newCapacity = (size_t)(stack->capacity * 2 + 1);
+    elem_t* temp = realloc_data(GET_DATA_CANARY_PTR(stack), newCapacity);
 
     if(temp == NULL){
         return STACK_ALLOC_FAILED;
     } else {
-        a->data = temp;
-        a->capacity = newCapacity;
+        stack->data = temp;
+        stack->capacity = newCapacity;
 
-        fill_data_with_poison(a);
+        fill_data_with_poison(stack);
     }
 
-    STACK_CHECK(a);
+    STACK_CHECK(stack);
 
     return STACK_OK;
 }
 
-ErrorStack push_stack(stack_t* a, elem_t elem){
-    STACK_CHECK(a);
+static ErrorStack narrow_stack(stack_t* stack){
+    STACK_CHECK(stack);
 
-    if(a->capacity == a->size){
-        DUMP_RETURN(a, expand_stack(a));
+    size_t newCapacity = (size_t)(stack->capacity / 2 + 1);
+    elem_t* temp = realloc_data(GET_DATA_CANARY_PTR(stack), newCapacity);
+
+    if(temp == NULL){
+        return STACK_ALLOC_FAILED;
+    } else {
+        stack->data = temp;
+        stack->capacity = newCapacity;
+
+        fill_data_with_poison(stack);
     }
 
-    a->data[a->size++] = elem;
-
-    STACK_CHECK(a);
+    STACK_CHECK(stack);
 
     return STACK_OK;
 }
 
-ErrorStack pop_stack(stack_t* a, elem_t* stack){
-    if(stack == NULL) return STACK_NULL_POINTER;
+ErrorStack push_stack(stack_t* stack, elem_t elem){
+    STACK_CHECK(stack);
 
-    STACK_CHECK(a);
-
-    if(a->size == 0){
-        DUMP_RETURN(a, STACK_UNDERFLOW);
+    if(stack->capacity == stack->size){
+        DUMP_RETURN(stack, expand_stack(stack));
     }
 
-    if(a->size * 4 <= a->capacity && a->capacity > MIN_CAPACITY){
-        DUMP_RETURN(a, narrow_stack(a));
+    stack->data[stack->size++] = elem;
+
+    STACK_CHECK(stack);
+
+    return STACK_OK;
+}
+
+ErrorStack pop_stack(stack_t* stack, elem_t* outValue){
+    if(outValue == NULL) return STACK_NULL_POINTER;
+
+    STACK_CHECK(stack);
+
+    if(stack->size == 0){
+        DUMP_RETURN(stack, STACK_UNDERFLOW);
     }
 
-    *stack = a->data[--a->size];
-    a->data[a->size] = ELEM_POISON;
+    if(stack->size * 4 <= stack->capacity && stack->capacity > MIN_CAPACITY){
+        DUMP_RETURN(stack, narrow_stack(stack));
+    }
 
-    STACK_CHECK(a);
+    *outValue = stack->data[--stack->size];
+    stack->data[stack->size] = ELEM_POISON;
+
+    STACK_CHECK(stack);
 
     return STACK_OK;
 }

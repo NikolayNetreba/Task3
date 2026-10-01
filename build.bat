@@ -6,7 +6,7 @@ if exist main.exe (
 )
 
 echo Building Release version...
-g++ main.cpp stack.cpp unitTest.cpp -o main.exe
+g++ src/*.cpp -Iinclude
 
 if %errorlevel% equ 0 (
     echo [SUCCESS] Build completed successfully! Running...
