@@ -94,7 +94,7 @@ void dump_stack(stack_t* a, ErrorStack err, const char* func, const char* file, 
 #else
     #define DUMP(st, status)
 
-    #define DUMP_RETURN(st, status)
+    #define DUMP_RETURN(st, status) return status;
 
     #define STACK_CHECK(st) do{            \
         ErrorStack status = stack_ok(st);  \

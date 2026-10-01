@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "stack.h"
+#include "unitTest.h"
 
 void test_struct_left_canary(){
     printf("\n=== TEST 1: Struct Left Canary ===\n");
@@ -21,7 +22,7 @@ void test_struct_right_canary(){
 
     st->rightCanary = 0xDEADBEEF;
 
-    ErrorStack err = push_stack(st, 42);
+    push_stack(st, 42);
 
     destroy_stack(st);
 }
@@ -34,7 +35,7 @@ void test_data_left_canary(){
     canary_t* left_data_canary = (canary_t*)GET_DATA_CANARY_PTR(st);
     *left_data_canary = 0x00;
 
-    ErrorStack err = push_stack(st, 100);
+    push_stack(st, 100);
 
     destroy_stack(st);
 }
@@ -103,6 +104,8 @@ void test_bad_capacity(){
     printf("=== TEST 9: bad capacity ===\n");
 
     stack_t* st0 = STACK_INIT(-2, "test_stack");
+    destroy_stack(st0);
+
     stack_t* st = STACK_INIT(10, "test_stack");
 
     st->capacity = MAX_CAPACITY + 100;

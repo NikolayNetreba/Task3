@@ -15,3 +15,39 @@
 - :white_check_mark: Сделать отладочный режим, который вызывает DUMP стека в случае ошибки
 - :white_check_mark: Реализовать канареечную защиту для всего стека и для массива где хранятся элементы
 - :white_square_button: Реализовать Защиту стека с помощью хэширования
+
+# Общая архитектура
+```text
+.
+├── colors.h
+├── config.h
+├── stack.h
+├── unitTest.h
+|
+├── main.cpp
+├── stack.cpp
+└── unitTest.cpp
+```
+
+Выбор типа данных, формат вывода, значение по умолчанию задаются в ```config.h```. В ```stack.h``` описана логика стека и отладочного режима.В ```unitTest``` описаны юнит-тесты.
+
+# Компиляция и запуск
+- ```g++ main.cpp stack.cpp unitTest.cpp``` - стандартный запуск с юнит-тестами.
+- Чтобы включить отладочный режим нужно использовать флаг: ```-DDEBUG```
+
+# Фичи
+
+# colors.h
+### Возможные цвета:
+```cpp
+MAKE_RED(text)
+MAKE_GREEN(text)
+MAKE_YELLOW(text)
+MAKE_BLUE(text)
+MAKE_MAGENTA(text)
+MAKE_CYAN(text)
+```
+Пример использования:
+```cpp
+fprintf(stderr, MAKE_YELLOW("Enter the file name:"));
+```

@@ -25,7 +25,7 @@ ErrorStack stack_ok(stack_t* a){
     if(a->data == NULL)
         return STACK_DATA_NULL;
 
-    if(a->capacity > MAX_CAPACITY || a->capacity == 0 && a->data != NULL)
+    if(a->capacity > MAX_CAPACITY || (a->capacity == 0 && a->data != NULL))
         return STACK_BAD_CAPACITY;
     if(a->size > a->capacity)
         return STACK_OVERFLOW;
@@ -56,13 +56,17 @@ const char* status_name(ErrorStack err){
             return "Bad capacity";
         case STACK_ALLOC_FAILED:
             return "Alloc failed";
+        case STACK_OK:
+            return "OK";
+        case STACK_PRINT:
+            return "it is just for print";
         default:
-            return "Ok";
+            return "shouldn't be here";
     }
 }
 
 #ifdef DEBUG
-void print_canary(uint64_t canary, const char* label){
+static void print_canary(uint64_t canary, const char* label){
     bool is_ok = (canary == CANARY_VALUE);
 
     const char* prefix = is_ok ? "    " : ">>> ";
@@ -92,7 +96,7 @@ void dump_stack(stack_t* a, ErrorStack err, const char* func, const char* file, 
         return;
     }
 
-    fprintf(stderr, "stack_t <" MAKE_GREEN("%s") ">, located at: [%p], created by %s at %s:%d\n{\n", a->name , a, a->func, a->file, a->line);
+    fprintf(stderr, "stack_t <" MAKE_GREEN("%s") ">, located at: [%p], created by %s at %s:%zu\n{\n", a->name , a, a->func, a->file, a->line);
 
     fprintf(stderr, "capacity = %zu\nsize     = %zu\ndata[%p]\n", a->capacity, a->size, a->data);
 
@@ -102,12 +106,12 @@ void dump_stack(stack_t* a, ErrorStack err, const char* func, const char* file, 
     print_canary(*find_right_canary(GET_DATA_CANARY_PTR(a), a->capacity), "data right canary");
 
     fprintf(stderr, "\n");
-    for(int i = 0; i < a->capacity; i++){
+    for(size_t i = 0; i < a->capacity; i++){
         if(i < a->size){
-            fprintf(stderr, "  *[%3d] - ", i);
+            fprintf(stderr, "  *[%3zu] - ", i);
             ELEM_PRINT(a->data[i]);
         } else {
-            fprintf(stderr, "   [%3d] - POISON: ", i);
+            fprintf(stderr, "   [%3zu] - POISON: ", i);
             ELEM_PRINT(a->data[i]);
         }
     }
@@ -127,7 +131,7 @@ static ErrorStack fill_data_with_poison(stack_t* stack){
     return STACK_OK;
 }
 
-elem_t* data_allocation(size_t capacity){
+static elem_t* data_allocation(size_t capacity){
     size_t dataBytes = calc_data_bytes(capacity);
     size_t totalBytes = dataBytes + sizeof(canary_t) * 2;
 
