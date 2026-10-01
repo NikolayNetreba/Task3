@@ -1,0 +1,9 @@
+void test_struct_left_canary();
+void test_struct_right_canary();
+void test_data_left_canary();
+void test_data_buffer_overflow();
+void test_null_pointer();
+void test_data_null();
+void test_underflow();
+void test_overflow();
+void test_bad_capacity();
