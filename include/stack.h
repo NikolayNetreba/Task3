@@ -9,6 +9,7 @@
 
 #define MIN_CAPACITY 10
 #define MAX_CAPACITY 1073741824
+#define START_HASH 5381
 
 typedef uint64_t canary_t;
 #define CANARY_VALUE 0x000D0AFFDEADBEEF
@@ -44,6 +45,7 @@ typedef struct{
         size_t line;
     #endif
 
+    uint64_t hash;
     canary_t rightCanary;
 } stack_t;
 

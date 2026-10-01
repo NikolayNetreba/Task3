@@ -19,6 +19,32 @@ static canary_t* find_right_canary(char* start, size_t capacity){
 }
 
 //=============DEBUG======================================
+uint64_t calc_hash(const void* ptr, size_t len, uint64_t startHash){
+    uint8_t* oneByte = (uint8_t*)ptr;
+    uint64_t hash = startHash;
+
+    for(size_t i = 0; i < len; i++){
+        hash = (hash << 6) + oneByte[i];
+    }
+
+    return hash;
+}
+
+uint64_t calc_full_stack_hash(stack_t* stack){
+    if(stack == NULL) return;
+
+    stack_t temp = *stack;
+    temp.hash = 0;
+
+    uint64_t h = calc_hash(stack, sizeof(stack_t), START_HASH);
+
+    if(temp.data != NULL){
+        h = calc_hash(GET_DATA_CANARY_PTR(stack), 2 * sizeof(canary_t) + sizeof(elem_t) * stack->capacity, h);
+    }
+
+    return h;
+}
+
 ErrorStack stack_ok(stack_t* stack){
     if(stack == NULL)
         return STACK_NULL_POINTER;
@@ -178,6 +204,8 @@ stack_t* init_stack(size_t capacity
         stack->file = file;
         stack->line = line;
     #endif
+
+    stack->hash = calc_full_stack_hash(stack);
 
     return stack;
 }
