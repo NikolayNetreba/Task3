@@ -103,10 +103,10 @@ void test_overflow(){
 void test_bad_capacity(){
     printf("=== TEST 9: bad capacity ===\n");
 
-    stack_t* st0 = STACK_INIT(-2, "test_stack");
+    stack_t* st0 = STACK_INIT(-2, "test_1");
     destroy_stack(st0);
 
-    stack_t* st = STACK_INIT(10, "test_stack");
+    stack_t* st = STACK_INIT(10, "test_2");
 
     st->capacity = MAX_CAPACITY + 100;
     push_stack(st, 10);

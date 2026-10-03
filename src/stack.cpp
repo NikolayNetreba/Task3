@@ -13,6 +13,8 @@ static size_t calc_data_bytes(size_t capacity){
 }
 
 static canary_t* find_right_canary(char* start, size_t capacity){
+    assert(start);
+
     size_t dataBytes = calc_data_bytes(capacity);
 
     return (canary_t*)(start + dataBytes + sizeof(canary_t));
@@ -20,6 +22,8 @@ static canary_t* find_right_canary(char* start, size_t capacity){
 
 //=============DEBUG======================================
 static uint64_t calc_hash(const void* ptr, size_t len, uint64_t startHash){
+    assert(ptr);
+
     const uint8_t* oneByte = (const uint8_t*)ptr;
     uint64_t hash = startHash;
 
@@ -46,8 +50,8 @@ static uint64_t calc_full_stack_hash(stack_t* stack){
 }
 
 ErrorStack stack_ok(stack_t* stack){
-    if(stack == NULL)
-        return STACK_NULL_POINTER;
+    // if(stack == NULL)
+    //     return STACK_NULL_POINTER;
     if(stack->data == NULL)
         return STACK_DATA_NULL;
 
@@ -186,7 +190,7 @@ static elem_t* data_allocation(size_t capacity){
 stack_t* init_stack(size_t capacity
                     ON_DBG(, const char* name, const char* func, const char* file, size_t line)){
 
-    if(capacity > MAX_CAPACITY) return NULL;
+    if(capacity > MAX_CAPACITY){}
 
     stack_t* stack = (stack_t*) calloc(1, sizeof(stack_t));
     if(stack == NULL){
@@ -199,7 +203,7 @@ stack_t* init_stack(size_t capacity
     stack->leftCanary = CANARY_VALUE;
     stack->rightCanary = CANARY_VALUE;
 
-    stack->data = data_allocation(capacity);
+    stack->data = data_allocation(stack->capacity);
     if(stack->data == NULL){
         DUMP(stack, STACK_DATA_NULL);
         destroy_stack(stack);
@@ -213,9 +217,8 @@ stack_t* init_stack(size_t capacity
         stack->func = func;
         stack->file = file;
         stack->line = line;
+        stack->hash = calc_full_stack_hash(stack);
     #endif
-
-    stack->hash = calc_full_stack_hash(stack);
 
     return stack;
 }
@@ -296,7 +299,9 @@ ErrorStack push_stack(stack_t* stack, elem_t elem){
 
     stack->data[stack->size++] = elem;
 
+    #ifdef DEBUG
     stack->hash = calc_full_stack_hash(stack);
+    #endif
 
     STACK_CHECK(stack);
 
@@ -319,7 +324,9 @@ ErrorStack pop_stack(stack_t* stack, elem_t* outValue){
     *outValue = stack->data[--stack->size];
     stack->data[stack->size] = ELEM_POISON;
 
+    #ifdef DEBUG
     stack->hash = calc_full_stack_hash(stack);
+    #endif
 
     STACK_CHECK(stack);
 

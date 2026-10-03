@@ -12,7 +12,7 @@
 #define START_HASH 5381
 
 typedef uint64_t canary_t;
-#define CANARY_VALUE 0x000D0AFFDEADBEEF
+#define CANARY_VALUE 0xDBED0AFFDEADBEEF
 
 #define GET_DATA_CANARY_PTR(st) ((char*)(st)->data - sizeof(canary_t))
 
