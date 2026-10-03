@@ -213,9 +213,8 @@ stack_t* init_stack(size_t capacity
         stack->func = func;
         stack->file = file;
         stack->line = line;
+        stack->hash = calc_full_stack_hash(stack);
     #endif
-
-    stack->hash = calc_full_stack_hash(stack);
 
     return stack;
 }
@@ -296,7 +295,9 @@ ErrorStack push_stack(stack_t* stack, elem_t elem){
 
     stack->data[stack->size++] = elem;
 
+    #ifdef
     stack->hash = calc_full_stack_hash(stack);
+    #endif
 
     STACK_CHECK(stack);
 
@@ -319,7 +320,9 @@ ErrorStack pop_stack(stack_t* stack, elem_t* outValue){
     *outValue = stack->data[--stack->size];
     stack->data[stack->size] = ELEM_POISON;
 
+    #ifdef
     stack->hash = calc_full_stack_hash(stack);
+    #endif
 
     STACK_CHECK(stack);
 
