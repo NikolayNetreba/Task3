@@ -13,4 +13,6 @@ int main(){
     test_underflow();
     test_overflow();
     test_bad_capacity();
+
+    test_hash_corrupt();
 }

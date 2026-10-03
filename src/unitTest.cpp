@@ -116,3 +116,14 @@ void test_bad_capacity(){
 
     destroy_stack(st);
 }
+
+void test_hash_corrupt(){
+    printf("=== TEST 10: hash_corrupt ===\n");
+
+    stack_t* st = STACK_INIT(10, "test");
+
+    st->data[4] = 100;
+    push_stack(st, 1);
+
+    destroy_stack(st);
+}

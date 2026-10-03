@@ -19,24 +19,24 @@ static canary_t* find_right_canary(char* start, size_t capacity){
 }
 
 //=============DEBUG======================================
-uint64_t calc_hash(const void* ptr, size_t len, uint64_t startHash){
-    uint8_t* oneByte = (uint8_t*)ptr;
+static uint64_t calc_hash(const void* ptr, size_t len, uint64_t startHash){
+    const uint8_t* oneByte = (const uint8_t*)ptr;
     uint64_t hash = startHash;
 
     for(size_t i = 0; i < len; i++){
-        hash = (hash << 6) + oneByte[i];
+        hash = (hash << 6) + hash + oneByte[i];
     }
 
     return hash;
 }
 
-uint64_t calc_full_stack_hash(stack_t* stack){
-    if(stack == NULL) return;
+static uint64_t calc_full_stack_hash(stack_t* stack){
+    assert(stack);
 
     stack_t temp = *stack;
     temp.hash = 0;
 
-    uint64_t h = calc_hash(stack, sizeof(stack_t), START_HASH);
+    uint64_t h = calc_hash(&temp, sizeof(stack_t), START_HASH);
 
     if(temp.data != NULL){
         h = calc_hash(GET_DATA_CANARY_PTR(stack), 2 * sizeof(canary_t) + sizeof(elem_t) * stack->capacity, h);
@@ -60,6 +60,10 @@ ErrorStack stack_ok(stack_t* stack){
         return STACK_CANARY_DIED;
     if(*(canary_t*)(GET_DATA_CANARY_PTR(stack)) != CANARY_VALUE || *find_right_canary(GET_DATA_CANARY_PTR(stack), stack->capacity) != CANARY_VALUE)
         return STACK_DATA_CANARY_DIED;
+
+    if(stack->hash != calc_full_stack_hash(stack)){
+        return STACK_HASH_WAS_CORRUPTED;
+    }
 
     return STACK_OK;
 }
@@ -86,6 +90,8 @@ const char* status_name(ErrorStack err){
             return "OK";
         case STACK_PRINT:
             return "it is just for print";
+        case STACK_HASH_WAS_CORRUPTED:
+            return "Hash was corrupted";
         default:
             return "shouldn't be here";
     }
@@ -130,8 +136,12 @@ void dump_stack(stack_t* stack, ErrorStack err, const char* func, const char* fi
     print_canary(stack->rightCanary, "stack right canary");
     print_canary(*(canary_t*)(GET_DATA_CANARY_PTR(stack)), "data left canary");
     print_canary(*find_right_canary(GET_DATA_CANARY_PTR(stack), stack->capacity), "data right canary");
+    if(err == STACK_HASH_WAS_CORRUPTED){
+        fprintf(stderr, "\ncurrent hash = " MAKE_RED("%llu") "\nexpected hash = %llu\n", calc_full_stack_hash(stack), stack->hash);
+    } else {
+        fprintf(stderr, "\nhash = %llu\n", stack->hash);
+    }
 
-    fprintf(stderr, "\n");
     for(size_t i = 0; i < stack->capacity; i++){
         if(i < stack->size){
             fprintf(stderr, "  *[%3zu] - ", i);
@@ -233,6 +243,7 @@ static elem_t* realloc_data(char* data, size_t newCapacity){
     canary_t* rightCanary = find_right_canary(temp, newCapacity);
     *rightCanary = CANARY_VALUE;
 
+
     return (elem_t*)(temp + sizeof(canary_t));
 }
 
@@ -285,6 +296,8 @@ ErrorStack push_stack(stack_t* stack, elem_t elem){
 
     stack->data[stack->size++] = elem;
 
+    stack->hash = calc_full_stack_hash(stack);
+
     STACK_CHECK(stack);
 
     return STACK_OK;
@@ -305,6 +318,8 @@ ErrorStack pop_stack(stack_t* stack, elem_t* outValue){
 
     *outValue = stack->data[--stack->size];
     stack->data[stack->size] = ELEM_POISON;
+
+    stack->hash = calc_full_stack_hash(stack);
 
     STACK_CHECK(stack);
 

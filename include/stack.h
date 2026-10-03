@@ -28,7 +28,8 @@ typedef enum{
     STACK_ALLOC_FAILED,
     STACK_PRINT,
     STACK_CANARY_DIED,
-    STACK_DATA_CANARY_DIED
+    STACK_DATA_CANARY_DIED,
+    STACK_HASH_WAS_CORRUPTED
 } ErrorStack;
 
 typedef struct{

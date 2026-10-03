@@ -7,3 +7,4 @@ void test_data_null();
 void test_underflow();
 void test_overflow();
 void test_bad_capacity();
+void test_hash_corrupt();
