@@ -295,7 +295,7 @@ ErrorStack push_stack(stack_t* stack, elem_t elem){
 
     stack->data[stack->size++] = elem;
 
-    #ifdef
+    #ifdef DEBUG
     stack->hash = calc_full_stack_hash(stack);
     #endif
 
@@ -320,7 +320,7 @@ ErrorStack pop_stack(stack_t* stack, elem_t* outValue){
     *outValue = stack->data[--stack->size];
     stack->data[stack->size] = ELEM_POISON;
 
-    #ifdef
+    #ifdef DEBUG
     stack->hash = calc_full_stack_hash(stack);
     #endif
 
